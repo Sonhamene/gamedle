@@ -1,0 +1,41 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model Game {
+  id              Int      @id @default(autoincrement())
+  title           String
+  normalizedTitle  String   @unique
+  coverUrl String?
+  aliases         String   @default("")
+  releaseYear     Int?
+  developer       String?
+  publisher       String?
+  description     String?
+  platforms       String   @default("")
+  genres          String   @default("")
+  difficulty      String   @default("normal")
+  isActive        Boolean  @default(true)
+  isDailyEligible Boolean  @default(true)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  hints Hint[]
+}
+
+model Hint {
+  id       Int    @id @default(autoincrement())
+  gameId   Int
+  position Int
+  category String
+  content  String
+
+  game Game @relation(fields: [gameId], references: [id], onDelete: Cascade)
+
+  @@unique([gameId, position])
+}
