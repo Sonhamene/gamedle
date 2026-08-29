@@ -409,3 +409,38 @@ h3 {
 .game-cover-image.revealed {
   filter: blur(0) !important;
 }
+
+.statistics-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 10px;
+}
+
+.statistic-card {
+  display: flex;
+  min-height: 92px;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  border: 1px solid #302d3d;
+  border-radius: 13px;
+  background: #1b1a23;
+  text-align: center;
+}
+
+.statistic-card strong {
+  color: #bcb2ff;
+  font-size: 1.5rem;
+}
+
+.statistic-card span {
+  color: #9796a5;
+  font-size: 0.75rem;
+}
+
+@media (max-width: 560px) {
+  .statistics-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}

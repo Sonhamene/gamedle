@@ -12,6 +12,46 @@ function App() {
   const [mensagem, setMensagem] = useState("");
   const [erros, setErros] = useState(0);
   const [acertou, setAcertou] = useState(false);
+  const [estatisticas, setEstatisticas] = useState(() => {
+    const dadosSalvos = localStorage.getItem("gamedle-estatisticas");
+
+    if (dadosSalvos) {
+      return JSON.parse(dadosSalvos);
+    }
+
+    return {
+      jogos: 0,
+      vitorias: 0,
+      sequencia: 0,
+      melhorSequencia: 0
+    };
+  });
+
+  async function carregarJogo(url) {
+    setCarregando(true);
+    setErro("");
+    setMensagem("");
+    setResposta("");
+    setTentativas([]);
+    setDicasVisiveis([0]);
+    setErros(0);
+    setAcertou(false);
+
+    try {
+      const response = await fetch(url);
+
+      if (!response.ok) {
+        throw new Error("Não foi possível carregar o jogo.");
+      }
+
+      const data = await response.json();
+      setJogo(data.jogo);
+    } catch (error) {
+      setErro("Não foi possível carregar o novo jogo.");
+    } finally {
+      setCarregando(false);
+    }
+  }
 
   useEffect(() => {
     async function carregarJogoDiario() {
@@ -42,48 +82,73 @@ function App() {
     }
   }
 
-function enviarResposta(event) {
-  event.preventDefault();
+  function registrarResultado(vitoria) {
+  setEstatisticas((atual) => {
+    const novaSequencia = vitoria ? atual.sequencia + 1 : 0;
 
-  const respostaLimpa = resposta.trim();
+    const novasEstatisticas = {
+      jogos: atual.jogos + 1,
+      vitorias: vitoria ? atual.vitorias + 1 : atual.vitorias,
+      sequencia: novaSequencia,
+      melhorSequencia: Math.max(
+        atual.melhorSequencia,
+        novaSequencia
+      )
+    };
 
-  if (!respostaLimpa) {
-    setMensagem("Digite uma resposta antes de tentar.");
-    return;
-  }
+    localStorage.setItem(
+      "gamedle-estatisticas",
+      JSON.stringify(novasEstatisticas)
+    );
 
-  if (tentativas.includes(respostaLimpa)) {
-    setMensagem("Você já tentou essa resposta.");
-    return;
-  }
+    return novasEstatisticas;
+  });
+}
 
-  const novasTentativas = [...tentativas, respostaLimpa];
+  function enviarResposta(event) {
+    event.preventDefault();
 
-  setTentativas(novasTentativas);
-  setResposta("");
+    const respostaLimpa = resposta.trim();
 
-  const respostasAceitas = [
-    jogo.titulo,
-    ...(jogo.aliases || [])
-  ].map((item) => item.toLowerCase());
+    if (!respostaLimpa) {
+      setMensagem("Digite uma resposta antes de tentar.");
+      return;
+    }
 
-  const respostaEstaCorreta = respostasAceitas.includes(
-    respostaLimpa.toLowerCase()
-  );
+    if (tentativas.includes(respostaLimpa)) {
+      setMensagem("Você já tentou essa resposta.");
+      return;
+    }
 
-  if (respostaEstaCorreta) {
-    setAcertou(true);
-    setMensagem(`🎉 Você acertou! O jogo era ${jogo.titulo}.`);
-  } else {
-    setErros((valorAtual) => valorAtual + 1);
+    const novasTentativas = [...tentativas, respostaLimpa];
 
-    if (novasTentativas.length >= 6) {
-      setMensagem(`Fim de jogo. A resposta era ${jogo.titulo}.`);
-    } else {
-      setMensagem("Ainda não. Tente novamente.");
+    setTentativas(novasTentativas);
+    setResposta("");
+
+    const respostasAceitas = [
+      jogo.titulo,
+      ...(jogo.aliases || [])
+    ].map((item) => item.toLowerCase());
+
+    const respostaEstaCorreta = respostasAceitas.includes(
+      respostaLimpa.toLowerCase()
+    );
+
+    if (respostaEstaCorreta) {
+  setAcertou(true);
+  registrarResultado(true);
+  setMensagem(`🎉 Você acertou! O jogo era ${jogo.titulo}.`);
+} else {
+      setErros((valorAtual) => valorAtual + 1);
+
+      if (novasTentativas.length >= 6) {
+  registrarResultado(false);
+  setMensagem(`Fim de jogo. A resposta era ${jogo.titulo}.`);
+} else {
+        setMensagem("Ainda não. Tente novamente.");
+      }
     }
   }
-}
 
   function iniciarNovaRodada() {
     setDicasVisiveis([0]);
@@ -143,15 +208,15 @@ function enviarResposta(event) {
         </section>
 
         <section className="game-cover">
-  <img
-    className={acertou ? "game-cover-image revealed" : "game-cover-image"}
-    src={jogo.coverUrl}
-    alt="Capa do jogo do desafio"
-    style={{
-      filter: `blur(${Math.max(0, 18 - erros * 3)}px)`
-    }}
-  />
-</section>
+          <img
+            className={acertou ? "game-cover-image revealed" : "game-cover-image"}
+            src={jogo.coverUrl}
+            alt="Capa do jogo do desafio"
+            style={{
+              filter: `blur(${Math.max(0, 18 - erros * 3)}px)`
+            }}
+          />
+        </section>
 
         <section className="mode-switcher">
           <button
@@ -165,7 +230,10 @@ function enviarResposta(event) {
           <button
             type="button"
             className={modo === "livre" ? "mode-button active" : "mode-button"}
-            onClick={() => setModo("livre")}
+            onClick={() => {
+              setModo("livre");
+              carregarJogo("http://localhost:3000/api/games/free");
+            }}
           >
             ♾️ Modo livre
           </button>
@@ -277,10 +345,45 @@ function enviarResposta(event) {
           </ol>
         </section>
 
+        <section className="section statistics-section">
+          <div className="section-title">
+            <div>
+              <p className="eyebrow">Seu desempenho</p>
+              <h2>Estatísticas</h2>
+            </div>
+          </div>
+
+          <div className="statistics-grid">
+            <div className="statistic-card">
+              <strong>{estatisticas.jogos}</strong>
+              <span>Jogos</span>
+            </div>
+
+            <div className="statistic-card">
+              <strong>{estatisticas.vitorias}</strong>
+              <span>Vitórias</span>
+            </div>
+
+            <div className="statistic-card">
+              <strong>{estatisticas.sequencia}</strong>
+              <span>Sequência atual</span>
+            </div>
+
+            <div className="statistic-card">
+              <strong>{estatisticas.melhorSequencia}</strong>
+              <span>Melhor sequência</span>
+            </div>
+          </div>
+        </section>
+
         <button
           type="button"
           className="secondary-button full-width"
-          onClick={iniciarNovaRodada}
+          onClick={() =>
+            modo === "livre"
+              ? carregarJogo("http://localhost:3000/api/games/free")
+              : iniciarNovaRodada()
+          }
         >
           Nova rodada
         </button>
