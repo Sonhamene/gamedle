@@ -302,12 +302,27 @@ async function compartilharResultado() {
           <button
             type="button"
             className={modo === "diario" ? "mode-button active" : "mode-button"}
-            onClick={() => setModo("diario")}
+            onClick={() => {
+  setModo("diario");
+  carregarJogo("http://localhost:3000/api/games/daily");
+}}
           >
             📅 Modo diário
           </button>
 
-          {finalizado && (
+          <button
+            type="button"
+            className={modo === "livre" ? "mode-button active" : "mode-button"}
+            onClick={() => {
+              setModo("livre");
+              carregarJogo("http://localhost:3000/api/games/free");
+            }}
+          >
+            ♾️ Modo livre
+          </button>
+        </section>
+
+        {finalizado && (
             <section className="result-panel">
               <div className="result-icon">
                 {acertou ? "🏆" : "😅"}
@@ -352,18 +367,6 @@ async function compartilharResultado() {
               </button>
             </section>
           )}
-
-          <button
-            type="button"
-            className={modo === "livre" ? "mode-button active" : "mode-button"}
-            onClick={() => {
-              setModo("livre");
-              carregarJogo("http://localhost:3000/api/games/free");
-            }}
-          >
-            ♾️ Modo livre
-          </button>
-        </section>
 
         <section className="status-grid">
           <div className="status-card">
