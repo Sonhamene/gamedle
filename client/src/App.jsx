@@ -6,26 +6,29 @@ function App() {
   const [carregando, setCarregando] = useState(true);
   const [erro, setErro] = useState("");
   const [modo, setModo] = useState("diario");
-  const [dicasVisiveis, setDicasVisiveis] = useState([0]);
   const [resposta, setResposta] = useState("");
   const [tentativas, setTentativas] = useState([]);
   const [mensagem, setMensagem] = useState("");
   const [erros, setErros] = useState(0);
   const [acertou, setAcertou] = useState(false);
+  const [finalizado, setFinalizado] = useState(false);
   const [estatisticas, setEstatisticas] = useState(() => {
-    const dadosSalvos = localStorage.getItem("gamedle-estatisticas");
+  const dadosSalvos = localStorage.getItem("gamedle-estatisticas");
 
-    if (dadosSalvos) {
-      return JSON.parse(dadosSalvos);
-    }
+  if (dadosSalvos) {
+    return JSON.parse(dadosSalvos);
+  }
 
-    return {
-      jogos: 0,
-      vitorias: 0,
-      sequencia: 0,
-      melhorSequencia: 0
-    };
-  });
+  return {
+    jogos: 0,
+    vitorias: 0,
+    sequencia: 0,
+    melhorSequencia: 0
+  };
+});
+
+const [mostrarAjuda, setMostrarAjuda] = useState(false);
+
 
   async function carregarJogo(url) {
     setCarregando(true);
@@ -33,9 +36,9 @@ function App() {
     setMensagem("");
     setResposta("");
     setTentativas([]);
-    setDicasVisiveis([0]);
     setErros(0);
     setAcertou(false);
+    setFinalizado(false);
 
     try {
       const response = await fetch(url);
@@ -76,37 +79,35 @@ function App() {
     carregarJogoDiario();
   }, []);
 
-  function revelarDica(index) {
-    if (!dicasVisiveis.includes(index)) {
-      setDicasVisiveis([...dicasVisiveis, index]);
-    }
-  }
-
   function registrarResultado(vitoria) {
-  setEstatisticas((atual) => {
-    const novaSequencia = vitoria ? atual.sequencia + 1 : 0;
+    setEstatisticas((atual) => {
+      const novaSequencia = vitoria ? atual.sequencia + 1 : 0;
 
-    const novasEstatisticas = {
-      jogos: atual.jogos + 1,
-      vitorias: vitoria ? atual.vitorias + 1 : atual.vitorias,
-      sequencia: novaSequencia,
-      melhorSequencia: Math.max(
-        atual.melhorSequencia,
-        novaSequencia
-      )
-    };
+      const novasEstatisticas = {
+        jogos: atual.jogos + 1,
+        vitorias: vitoria ? atual.vitorias + 1 : atual.vitorias,
+        sequencia: novaSequencia,
+        melhorSequencia: Math.max(
+          atual.melhorSequencia,
+          novaSequencia
+        )
+      };
 
-    localStorage.setItem(
-      "gamedle-estatisticas",
-      JSON.stringify(novasEstatisticas)
-    );
+      localStorage.setItem(
+        "gamedle-estatisticas",
+        JSON.stringify(novasEstatisticas)
+      );
 
-    return novasEstatisticas;
-  });
-}
+      return novasEstatisticas;
+    });
+  }
 
   function enviarResposta(event) {
     event.preventDefault();
+
+    if (finalizado) {
+      return;
+    }
 
     const respostaLimpa = resposta.trim();
 
@@ -135,29 +136,58 @@ function App() {
     );
 
     if (respostaEstaCorreta) {
-  setAcertou(true);
-  registrarResultado(true);
-  setMensagem(`🎉 Você acertou! O jogo era ${jogo.titulo}.`);
-} else {
+      setAcertou(true);
+      setFinalizado(true);
+      registrarResultado(true);
+      setMensagem(`🎉 Você acertou! O jogo era ${jogo.titulo}.`);
+    } else {
       setErros((valorAtual) => valorAtual + 1);
 
       if (novasTentativas.length >= 6) {
-  registrarResultado(false);
-  setMensagem(`Fim de jogo. A resposta era ${jogo.titulo}.`);
-} else {
+        setFinalizado(true);
+        registrarResultado(false);
+        setMensagem(`Fim de jogo. A resposta era ${jogo.titulo}.`);
+      } else {
         setMensagem("Ainda não. Tente novamente.");
       }
     }
   }
 
   function iniciarNovaRodada() {
-    setDicasVisiveis([0]);
-    setResposta("");
-    setTentativas([]);
-    setMensagem("");
-    setErros(0);
-    setAcertou(false);
+  setResposta("");
+  setTentativas([]);
+  setMensagem("");
+  setErros(0);
+  setAcertou(false);
+  setFinalizado(false);
+}
+
+async function compartilharResultado() {
+  const pontuacao = Math.max(0, 100 - erros * 20);
+
+  const resultado = [
+    "🎮 Gamedle",
+    modo === "diario" ? "Desafio diário" : "Modo livre",
+    `${acertou ? "✅" : "❌"} ${tentativas.length}/6`,
+    `🏆 Pontuação: ${pontuacao}`
+  ].join("\n");
+
+  try {
+    if (navigator.share) {
+      await navigator.share({
+        title: "Meu resultado no Gamedle",
+        text: resultado
+      });
+
+      return;
+    }
+
+    await navigator.clipboard.writeText(resultado);
+    setMensagem("Resultado copiado para a área de transferência!");
+  } catch (error) {
+    setMensagem("Não foi possível compartilhar o resultado.");
   }
+}
 
   if (carregando) {
     return (
@@ -177,6 +207,7 @@ function App() {
     );
   }
 
+
   return (
     <div className="app">
       <header className="site-header">
@@ -186,37 +217,86 @@ function App() {
         </a>
 
         <div className="header-actions">
-          <button type="button" className="small-button">
-            ?
-          </button>
-
+          <button
+  type="button"
+  className="small-button"
+  onClick={() => setMostrarAjuda(true)}
+  aria-label="Como jogar"
+>
+  ?
+</button>
           <button type="button" className="small-button">
             ◐
           </button>
         </div>
       </header>
 
-      <main className="game-container">
+{mostrarAjuda && (
+  <div
+    className="modal-backdrop"
+    onClick={() => setMostrarAjuda(false)}
+  >
+    <section
+      className="help-modal"
+      onClick={(event) => event.stopPropagation()}
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="help-title"
+    >
+      <button
+        type="button"
+        className="modal-close"
+        onClick={() => setMostrarAjuda(false)}
+        aria-label="Fechar instruções"
+      >
+        ×
+      </button>
+
+      <p className="eyebrow">Como jogar</p>
+
+      <h2 id="help-title">Descubra o videogame</h2>
+
+      <ol className="instructions-list">
+        <li>A imagem começa borrada.</li>
+        <li>Digite o nome de um videogame.</li>
+        <li>Você tem seis tentativas.</li>
+        <li>A cada erro, a imagem fica mais nítida.</li>
+        <li>Cada erro reduz sua pontuação.</li>
+        <li>Acerte com menos erros para conseguir mais pontos.</li>
+      </ol>
+
+      <button
+        type="button"
+        className="primary-button full-width"
+        onClick={() => setMostrarAjuda(false)}
+      >
+        Entendi
+      </button>
+    </section>
+  </div>
+)}
+
+<main className="game-container">
         <section className="game-heading">
           <p className="eyebrow">Desafio de videogames</p>
 
           <h1>Qual jogo é esse?</h1>
 
           <p className="game-description">
-            Use as dicas para descobrir o videogame antes que suas tentativas acabem.
+            A imagem começa borrada. A cada erro, ela fica mais nítida, mas sua pontuação diminui.
           </p>
         </section>
 
         <section className="game-cover">
-          <img
-            className={acertou ? "game-cover-image revealed" : "game-cover-image"}
-            src={jogo.coverUrl}
-            alt="Capa do jogo do desafio"
-            style={{
-              filter: `blur(${Math.max(0, 18 - erros * 3)}px)`
-            }}
-          />
-        </section>
+  <img
+    className={acertou ? "game-cover-image revealed" : "game-cover-image"}
+    src={jogo.coverUrl}
+    alt="Capa borrada do jogo do desafio"
+    style={{
+      filter: `blur(${Math.max(0, 18 - erros * 3)}px)`
+    }}
+  />
+</section>
 
         <section className="mode-switcher">
           <button
@@ -226,6 +306,52 @@ function App() {
           >
             📅 Modo diário
           </button>
+
+          {finalizado && (
+            <section className="result-panel">
+              <div className="result-icon">
+                {acertou ? "🏆" : "😅"}
+              </div>
+
+              <p className="eyebrow">
+                {acertou ? "Parabéns!" : "Rodada encerrada"}
+              </p>
+
+              <h2>
+                {acertou ? "Você acertou!" : "Não foi dessa vez"}
+              </h2>
+
+              <p className="result-message">
+                O jogo era:
+              </p>
+
+              <strong className="result-title">
+                {jogo.titulo}
+              </strong>
+
+              <div className="result-grid">
+                <div>
+                  <strong>{tentativas.length}/6</strong>
+                  <span>Tentativas</span>
+                </div>
+
+                <div>
+                  <strong>
+                    {Math.max(0, 100 - erros * 20)}
+                  </strong>
+                  <span>Pontuação</span>
+                </div>
+              </div>
+
+              <button
+                type="button"
+                className="secondary-button full-width"
+                onClick={compartilharResultado}
+              >
+                Compartilhar resultado
+              </button>
+            </section>
+          )}
 
           <button
             type="button"
@@ -254,47 +380,7 @@ function App() {
 
           <div className="status-card">
             <span>Pontuação</span>
-            <strong>{100 - Math.max(0, dicasVisiveis.length - 1) * 10}</strong>
-          </div>
-        </section>
-
-        <section className="section">
-          <div className="section-title">
-            <div>
-              <p className="eyebrow">Informações desbloqueáveis</p>
-              <h2>Dicas</h2>
-            </div>
-
-            <span>{dicasVisiveis.length}/6 reveladas</span>
-          </div>
-
-          <div className="hints-list">
-            {jogo.dicas.map((dica, index) => {
-              const visivel = dicasVisiveis.includes(index);
-
-              return (
-                <article
-                  className={visivel ? "hint-card revealed" : "hint-card"}
-                  key={dica.ordem}
-                >
-                  <div className="hint-number">{index + 1}</div>
-
-                  <div className="hint-content">
-                    <h3>{dica.categoria}</h3>
-                    <p>{visivel ? dica.texto : "Dica bloqueada"}</p>
-                  </div>
-
-                  <button
-                    type="button"
-                    className="hint-button"
-                    onClick={() => revelarDica(index)}
-                    disabled={visivel}
-                  >
-                    {visivel ? "Revelada" : "Revelar"}
-                  </button>
-                </article>
-              );
-            })}
+            <strong>{Math.max(0, 100 - erros * 20)}</strong>
           </div>
         </section>
 
@@ -310,13 +396,13 @@ function App() {
               placeholder="Ex.: Minecraft"
               value={resposta}
               onChange={(event) => setResposta(event.target.value)}
-              disabled={tentativas.length >= 6}
+              disabled={finalizado}
             />
 
             <button
               className="primary-button"
               type="submit"
-              disabled={tentativas.length >= 6}
+              disabled={finalizado}
             >
               Adivinhar
             </button>
