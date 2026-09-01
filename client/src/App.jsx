@@ -31,6 +31,10 @@ function App() {
   });
   const [dataDesafio, setDataDesafio] = useState("");
   const [mostrarAjuda, setMostrarAjuda] = useState(false);
+  const [temaClaro, setTemaClaro] = useState(() => {
+  return localStorage.getItem("gamedle-tema") === "claro";
+});
+
 
 
   async function carregarJogo(url) {
@@ -61,6 +65,13 @@ function App() {
       setCarregando(false);
     }
   }
+
+  useEffect(() => {
+  localStorage.setItem(
+    "gamedle-tema",
+    temaClaro ? "claro" : "escuro"
+  );
+}, [temaClaro]);
 
   useEffect(() => {
     async function carregarJogoDiario() {
@@ -270,7 +281,7 @@ function App() {
 
 
   return (
-    <div className="app">
+    <div className={temaClaro ? "app light-theme" : "app"}>
       <header className="site-header">
         <a href="/" className="brand">
           <span className="brand-icon">🎮</span>
@@ -286,9 +297,14 @@ function App() {
           >
             ?
           </button>
-          <button type="button" className="small-button">
-            ◐
-          </button>
+          <button
+  type="button"
+  className="small-button"
+  onClick={() => setTemaClaro((temaAtual) => !temaAtual)}
+  aria-label="Alternar tema"
+>
+  {temaClaro ? "🌙" : "☀️"}
+</button>
         </div>
       </header>
 

@@ -13,8 +13,11 @@
 body {
   margin: 0;
   min-width: 320px;
-  background:
-    radial-gradient(circle at top, #25203a 0, #101014 42rem);
+  background: #101014;
+}
+
+body:has(.light-theme) {
+  background: #f5f6fa;
 }
 
 button,
@@ -565,4 +568,99 @@ h3 {
   color: #aaaab8;
   text-align: center;
   font-size: 0.9rem;
+}
+
+.app.light-theme {
+  color: #20202a;
+  background: #f5f6fa;
+}
+
+.app.light-theme .site-header {
+  border-bottom-color: #dedee8;
+  background: rgba(255, 255, 255, 0.92);
+}
+
+.app.light-theme .brand {
+  color: #20202a;
+}
+
+.app.light-theme .small-button {
+  border-color: #d4d3df;
+  color: #30303b;
+  background: #ffffff;
+}
+
+.app.light-theme .game-description,
+.app.light-theme .section-title > span,
+.app.light-theme .status-card span,
+.app.light-theme .hint-content p,
+.app.light-theme .attempt-row strong,
+.app.light-theme .result-message,
+.app.light-theme .statistic-card span {
+  color: #686878;
+}
+
+.app.light-theme .status-card,
+.app.light-theme .hint-card,
+.app.light-theme .attempt-row,
+.app.light-theme .statistic-card {
+  border-color: #dedee8;
+  background: #ffffff;
+}
+
+.app.light-theme .guess-input {
+  border-color: #c9c8d5;
+  color: #20202a;
+  background: #ffffff;
+}
+
+.app.light-theme .guess-input::placeholder {
+  color: #9291a0;
+}
+
+.app.light-theme .guess-input:focus {
+  border-color: #6c5ce7;
+}
+
+.app.light-theme .secondary-button {
+  border-color: #d0cfdb;
+  color: #343341;
+  background: #ffffff;
+}
+
+.app.light-theme .secondary-button:hover {
+  background: #eeeeF5;
+}
+
+.app.light-theme .mode-switcher {
+  border-color: #dedee8;
+  background: #e9e9f1;
+}
+
+.app.light-theme .mode-button {
+  color: #686878;
+}
+
+.app.light-theme .mode-button.active {
+  color: #ffffff;
+  background: #6c5ce7;
+}
+
+.app.light-theme .site-footer {
+  color: #777684;
+}
+
+.app.light-theme .help-modal {
+  border-color: #dedee8;
+  color: #20202a;
+  background: #ffffff;
+}
+
+.app.light-theme .modal-close {
+  color: #30303b;
+  background: #eeeeF5;
+}
+
+.app.light-theme .instructions-list {
+  color: #686878;
 }
