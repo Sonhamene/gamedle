@@ -52,7 +52,7 @@ function App() {
       }
 
       const data = await response.json();
-      
+
       setJogo(data.jogo);
       setDataDesafio(data.data);
     } catch (error) {
@@ -75,6 +75,7 @@ function App() {
 
         const data = await response.json();
         setJogo(data.jogo);
+        setDataDesafio(data.data);
       } catch (error) {
         setErro("Não foi possível conectar com o servidor.");
       } finally {
@@ -363,9 +364,14 @@ function App() {
             type="button"
             className={modo === "diario" ? "mode-button active" : "mode-button"}
             onClick={() => {
+              if (modo === "diario" && finalizado) {
+                return;
+              }
+
               setModo("diario");
               carregarJogo(`${API_URL}/api/games/daily`);
             }}
+            disabled={modo === "diario" && finalizado}
           >
             📅 Modo diário
           </button>
@@ -426,6 +432,12 @@ function App() {
               Compartilhar resultado
             </button>
           </section>
+        )}
+
+        {modo === "diario" && finalizado && (
+          <p className="daily-locked-message">
+            Você já jogou o desafio de hoje. Volte amanhã para um novo jogo!
+          </p>
         )}
 
         <section className="status-grid">
@@ -525,17 +537,17 @@ function App() {
           </div>
         </section>
 
-        <button
-          type="button"
-          className="secondary-button full-width"
-          onClick={() =>
-            modo === "livre"
-              ? carregarJogo(`${API_URL}/api/games/free`)
-              : iniciarNovaRodada()
-          }
-        >
-          Nova rodada
-        </button>
+        {modo === "livre" && (
+          <button
+            type="button"
+            className="secondary-button full-width"
+            onClick={() =>
+              carregarJogo(`${API_URL}/api/games/free`)
+            }
+          >
+            Nova rodada
+          </button>
+        )}
       </main>
 
       <footer className="site-footer">
