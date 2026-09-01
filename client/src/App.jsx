@@ -16,21 +16,21 @@ function App() {
   const [acertou, setAcertou] = useState(false);
   const [finalizado, setFinalizado] = useState(false);
   const [estatisticas, setEstatisticas] = useState(() => {
-  const dadosSalvos = localStorage.getItem("gamedle-estatisticas");
+    const dadosSalvos = localStorage.getItem("gamedle-estatisticas");
 
-  if (dadosSalvos) {
-    return JSON.parse(dadosSalvos);
-  }
+    if (dadosSalvos) {
+      return JSON.parse(dadosSalvos);
+    }
 
-  return {
-    jogos: 0,
-    vitorias: 0,
-    sequencia: 0,
-    melhorSequencia: 0
-  };
-});
-
-const [mostrarAjuda, setMostrarAjuda] = useState(false);
+    return {
+      jogos: 0,
+      vitorias: 0,
+      sequencia: 0,
+      melhorSequencia: 0
+    };
+  });
+  const [dataDesafio, setDataDesafio] = useState("");
+  const [mostrarAjuda, setMostrarAjuda] = useState(false);
 
 
   async function carregarJogo(url) {
@@ -42,6 +42,7 @@ const [mostrarAjuda, setMostrarAjuda] = useState(false);
     setErros(0);
     setAcertou(false);
     setFinalizado(false);
+    setDataDesafio("");
 
     try {
       const response = await fetch(url);
@@ -51,7 +52,9 @@ const [mostrarAjuda, setMostrarAjuda] = useState(false);
       }
 
       const data = await response.json();
+      
       setJogo(data.jogo);
+      setDataDesafio(data.data);
     } catch (error) {
       setErro("Não foi possível carregar o novo jogo.");
     } finally {
@@ -82,6 +85,27 @@ const [mostrarAjuda, setMostrarAjuda] = useState(false);
     carregarJogoDiario();
   }, []);
 
+  useEffect(() => {
+    if (!dataDesafio) {
+      return;
+    }
+
+    const chave = `gamedle-diario-${dataDesafio}`;
+    const resultadoSalvo = localStorage.getItem(chave);
+
+    if (!resultadoSalvo) {
+      return;
+    }
+
+    const resultado = JSON.parse(resultadoSalvo);
+
+    setTentativas(resultado.tentativas);
+    setErros(resultado.erros);
+    setAcertou(resultado.acertou);
+    setFinalizado(true);
+    setMensagem(resultado.mensagem);
+  }, [dataDesafio]);
+
   function registrarResultado(vitoria) {
     setEstatisticas((atual) => {
       const novaSequencia = vitoria ? atual.sequencia + 1 : 0;
@@ -103,6 +127,19 @@ const [mostrarAjuda, setMostrarAjuda] = useState(false);
 
       return novasEstatisticas;
     });
+  }
+
+  function salvarResultadoDiario(dados) {
+    if (modo !== "diario" || !dataDesafio) {
+      return;
+    }
+
+    const chave = `gamedle-diario-${dataDesafio}`;
+
+    localStorage.setItem(
+      chave,
+      JSON.stringify(dados)
+    );
   }
 
   function enviarResposta(event) {
@@ -139,17 +176,37 @@ const [mostrarAjuda, setMostrarAjuda] = useState(false);
     );
 
     if (respostaEstaCorreta) {
+      const mensagemFinal = `🎉 Você acertou! O jogo era ${jogo.titulo}.`;
+
       setAcertou(true);
       setFinalizado(true);
       registrarResultado(true);
-      setMensagem(`🎉 Você acertou! O jogo era ${jogo.titulo}.`);
+      setMensagem(mensagemFinal);
+
+      salvarResultadoDiario({
+        tentativas: novasTentativas,
+        erros,
+        acertou: true,
+        mensagem: mensagemFinal
+      });
     } else {
       setErros((valorAtual) => valorAtual + 1);
 
       if (novasTentativas.length >= 6) {
+        const mensagemFinal = `Fim de jogo. A resposta era ${jogo.titulo}.`;
+        const errosFinais = erros + 1;
+
+        setErros(errosFinais);
         setFinalizado(true);
         registrarResultado(false);
-        setMensagem(`Fim de jogo. A resposta era ${jogo.titulo}.`);
+        setMensagem(mensagemFinal);
+
+        salvarResultadoDiario({
+          tentativas: novasTentativas,
+          erros: errosFinais,
+          acertou: false,
+          mensagem: mensagemFinal
+        });
       } else {
         setMensagem("Ainda não. Tente novamente.");
       }
@@ -157,40 +214,40 @@ const [mostrarAjuda, setMostrarAjuda] = useState(false);
   }
 
   function iniciarNovaRodada() {
-  setResposta("");
-  setTentativas([]);
-  setMensagem("");
-  setErros(0);
-  setAcertou(false);
-  setFinalizado(false);
-}
-
-async function compartilharResultado() {
-  const pontuacao = Math.max(0, 100 - erros * 20);
-
-  const resultado = [
-    "🎮 Gamedle",
-    modo === "diario" ? "Desafio diário" : "Modo livre",
-    `${acertou ? "✅" : "❌"} ${tentativas.length}/6`,
-    `🏆 Pontuação: ${pontuacao}`
-  ].join("\n");
-
-  try {
-    if (navigator.share) {
-      await navigator.share({
-        title: "Meu resultado no Gamedle",
-        text: resultado
-      });
-
-      return;
-    }
-
-    await navigator.clipboard.writeText(resultado);
-    setMensagem("Resultado copiado para a área de transferência!");
-  } catch (error) {
-    setMensagem("Não foi possível compartilhar o resultado.");
+    setResposta("");
+    setTentativas([]);
+    setMensagem("");
+    setErros(0);
+    setAcertou(false);
+    setFinalizado(false);
   }
-}
+
+  async function compartilharResultado() {
+    const pontuacao = Math.max(0, 100 - erros * 20);
+
+    const resultado = [
+      "🎮 Gamedle",
+      modo === "diario" ? "Desafio diário" : "Modo livre",
+      `${acertou ? "✅" : "❌"} ${tentativas.length}/6`,
+      `🏆 Pontuação: ${pontuacao}`
+    ].join("\n");
+
+    try {
+      if (navigator.share) {
+        await navigator.share({
+          title: "Meu resultado no Gamedle",
+          text: resultado
+        });
+
+        return;
+      }
+
+      await navigator.clipboard.writeText(resultado);
+      setMensagem("Resultado copiado para a área de transferência!");
+    } catch (error) {
+      setMensagem("Não foi possível compartilhar o resultado.");
+    }
+  }
 
   if (carregando) {
     return (
@@ -221,65 +278,65 @@ async function compartilharResultado() {
 
         <div className="header-actions">
           <button
-  type="button"
-  className="small-button"
-  onClick={() => setMostrarAjuda(true)}
-  aria-label="Como jogar"
->
-  ?
-</button>
+            type="button"
+            className="small-button"
+            onClick={() => setMostrarAjuda(true)}
+            aria-label="Como jogar"
+          >
+            ?
+          </button>
           <button type="button" className="small-button">
             ◐
           </button>
         </div>
       </header>
 
-{mostrarAjuda && (
-  <div
-    className="modal-backdrop"
-    onClick={() => setMostrarAjuda(false)}
-  >
-    <section
-      className="help-modal"
-      onClick={(event) => event.stopPropagation()}
-      role="dialog"
-      aria-modal="true"
-      aria-labelledby="help-title"
-    >
-      <button
-        type="button"
-        className="modal-close"
-        onClick={() => setMostrarAjuda(false)}
-        aria-label="Fechar instruções"
-      >
-        ×
-      </button>
+      {mostrarAjuda && (
+        <div
+          className="modal-backdrop"
+          onClick={() => setMostrarAjuda(false)}
+        >
+          <section
+            className="help-modal"
+            onClick={(event) => event.stopPropagation()}
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="help-title"
+          >
+            <button
+              type="button"
+              className="modal-close"
+              onClick={() => setMostrarAjuda(false)}
+              aria-label="Fechar instruções"
+            >
+              ×
+            </button>
 
-      <p className="eyebrow">Como jogar</p>
+            <p className="eyebrow">Como jogar</p>
 
-      <h2 id="help-title">Descubra o videogame</h2>
+            <h2 id="help-title">Descubra o videogame</h2>
 
-      <ol className="instructions-list">
-        <li>A imagem começa borrada.</li>
-        <li>Digite o nome de um videogame.</li>
-        <li>Você tem seis tentativas.</li>
-        <li>A cada erro, a imagem fica mais nítida.</li>
-        <li>Cada erro reduz sua pontuação.</li>
-        <li>Acerte com menos erros para conseguir mais pontos.</li>
-      </ol>
+            <ol className="instructions-list">
+              <li>A imagem começa borrada.</li>
+              <li>Digite o nome de um videogame.</li>
+              <li>Você tem seis tentativas.</li>
+              <li>A cada erro, a imagem fica mais nítida.</li>
+              <li>Cada erro reduz sua pontuação.</li>
+              <li>Acerte com menos erros para conseguir mais pontos.</li>
+            </ol>
 
-      <button
-        type="button"
-        className="primary-button full-width"
-        onClick={() => setMostrarAjuda(false)}
-      >
-        Entendi
-      </button>
-    </section>
-  </div>
-)}
+            <button
+              type="button"
+              className="primary-button full-width"
+              onClick={() => setMostrarAjuda(false)}
+            >
+              Entendi
+            </button>
+          </section>
+        </div>
+      )}
 
-<main className="game-container">
+      <main className="game-container">
         <section className="game-heading">
           <p className="eyebrow">Desafio de videogames</p>
 
@@ -291,24 +348,24 @@ async function compartilharResultado() {
         </section>
 
         <section className="game-cover">
-  <img
-    className={acertou ? "game-cover-image revealed" : "game-cover-image"}
-    src={jogo.coverUrl}
-    alt="Capa borrada do jogo do desafio"
-    style={{
-      filter: `blur(${Math.max(0, 18 - erros * 3)}px)`
-    }}
-  />
-</section>
+          <img
+            className={acertou ? "game-cover-image revealed" : "game-cover-image"}
+            src={jogo.coverUrl}
+            alt="Capa borrada do jogo do desafio"
+            style={{
+              filter: `blur(${Math.max(0, 18 - erros * 3)}px)`
+            }}
+          />
+        </section>
 
         <section className="mode-switcher">
           <button
             type="button"
             className={modo === "diario" ? "mode-button active" : "mode-button"}
             onClick={() => {
-  setModo("diario");
-  carregarJogo(`${API_URL}/api/games/daily`);
-}}
+              setModo("diario");
+              carregarJogo(`${API_URL}/api/games/daily`);
+            }}
           >
             📅 Modo diário
           </button>
@@ -326,50 +383,50 @@ async function compartilharResultado() {
         </section>
 
         {finalizado && (
-            <section className="result-panel">
-              <div className="result-icon">
-                {acertou ? "🏆" : "😅"}
+          <section className="result-panel">
+            <div className="result-icon">
+              {acertou ? "🏆" : "😅"}
+            </div>
+
+            <p className="eyebrow">
+              {acertou ? "Parabéns!" : "Rodada encerrada"}
+            </p>
+
+            <h2>
+              {acertou ? "Você acertou!" : "Não foi dessa vez"}
+            </h2>
+
+            <p className="result-message">
+              O jogo era:
+            </p>
+
+            <strong className="result-title">
+              {jogo.titulo}
+            </strong>
+
+            <div className="result-grid">
+              <div>
+                <strong>{tentativas.length}/6</strong>
+                <span>Tentativas</span>
               </div>
 
-              <p className="eyebrow">
-                {acertou ? "Parabéns!" : "Rodada encerrada"}
-              </p>
-
-              <h2>
-                {acertou ? "Você acertou!" : "Não foi dessa vez"}
-              </h2>
-
-              <p className="result-message">
-                O jogo era:
-              </p>
-
-              <strong className="result-title">
-                {jogo.titulo}
-              </strong>
-
-              <div className="result-grid">
-                <div>
-                  <strong>{tentativas.length}/6</strong>
-                  <span>Tentativas</span>
-                </div>
-
-                <div>
-                  <strong>
-                    {Math.max(0, 100 - erros * 20)}
-                  </strong>
-                  <span>Pontuação</span>
-                </div>
+              <div>
+                <strong>
+                  {Math.max(0, 100 - erros * 20)}
+                </strong>
+                <span>Pontuação</span>
               </div>
+            </div>
 
-              <button
-                type="button"
-                className="secondary-button full-width"
-                onClick={compartilharResultado}
-              >
-                Compartilhar resultado
-              </button>
-            </section>
-          )}
+            <button
+              type="button"
+              className="secondary-button full-width"
+              onClick={compartilharResultado}
+            >
+              Compartilhar resultado
+            </button>
+          </section>
+        )}
 
         <section className="status-grid">
           <div className="status-card">
