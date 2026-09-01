@@ -1,6 +1,9 @@
 import { useEffect, useState } from "react";
 import "./App.css";
 
+const API_URL =
+  import.meta.env.VITE_API_URL || "http://localhost:3000";
+
 function App() {
   const [jogo, setJogo] = useState(null);
   const [carregando, setCarregando] = useState(true);
@@ -60,7 +63,7 @@ const [mostrarAjuda, setMostrarAjuda] = useState(false);
     async function carregarJogoDiario() {
       try {
         const response = await fetch(
-          "http://localhost:3000/api/games/daily"
+          `${API_URL}/api/games/daily`
         );
 
         if (!response.ok) {
@@ -304,7 +307,7 @@ async function compartilharResultado() {
             className={modo === "diario" ? "mode-button active" : "mode-button"}
             onClick={() => {
   setModo("diario");
-  carregarJogo("http://localhost:3000/api/games/daily");
+  carregarJogo(`${API_URL}/api/games/daily`);
 }}
           >
             📅 Modo diário
@@ -315,7 +318,7 @@ async function compartilharResultado() {
             className={modo === "livre" ? "mode-button active" : "mode-button"}
             onClick={() => {
               setModo("livre");
-              carregarJogo("http://localhost:3000/api/games/free");
+              carregarJogo(`${API_URL}/api/games/free`);
             }}
           >
             ♾️ Modo livre
@@ -470,7 +473,7 @@ async function compartilharResultado() {
           className="secondary-button full-width"
           onClick={() =>
             modo === "livre"
-              ? carregarJogo("http://localhost:3000/api/games/free")
+              ? carregarJogo(`${API_URL}/api/games/free`)
               : iniciarNovaRodada()
           }
         >
