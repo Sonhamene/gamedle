@@ -148,7 +148,155 @@ const jogos = [
         content: "A aventura acontece no reino de Hyrule."
       }
     ]
+  },
+
+    {
+    title: "Super Mario Odyssey",
+    normalizedTitle: "super mario odyssey",
+    coverUrl: "/covers/super-mario-odyssey.jpg",
+    aliases: "super mario odyssey,mario odyssey",
+    releaseYear: 2017,
+    developer: "Nintendo",
+    publisher: "Nintendo",
+    description:
+      "Uma aventura de plataforma em 3D na qual Mario viaja por diferentes reinos.",
+    platforms: "Nintendo Switch",
+    genres: "Plataforma, Aventura",
+    difficulty: "facil",
+    isActive: true,
+    isDailyEligible: true,
+    hints: [
+      {
+        position: 1,
+        category: "Gênero",
+        content: "É um jogo de plataforma e aventura."
+      },
+      {
+        position: 2,
+        category: "Ano de lançamento",
+        content: "Foi lançado em 2017."
+      },
+      {
+        position: 3,
+        category: "Desenvolvedora",
+        content: "Foi desenvolvido pela Nintendo."
+      },
+      {
+        position: 4,
+        category: "Plataforma",
+        content: "Foi lançado exclusivamente para Nintendo Switch."
+      },
+      {
+        position: 5,
+        category: "Descrição",
+        content: "O protagonista viaja por vários reinos em uma aventura 3D."
+      },
+      {
+        position: 6,
+        category: "Dica final",
+        content: "O protagonista usa um chapéu que possui poderes especiais."
+      }
+    ]
+  },
+
+  {
+    title: "Grand Theft Auto V",
+    normalizedTitle: "grand theft auto v",
+    coverUrl: "/covers/grand-theft-auto-v.jpg",
+    aliases: "gta v,gta 5,gta five,grand theft auto 5",
+    releaseYear: 2013,
+    developer: "Rockstar North",
+    publisher: "Rockstar Games",
+    description:
+      "Um jogo de ação em mundo aberto ambientado na cidade fictícia de Los Santos.",
+    platforms: "PlayStation, Xbox, PC",
+    genres: "Ação, Mundo aberto",
+    difficulty: "normal",
+    isActive: true,
+    isDailyEligible: true,
+    hints: [
+      {
+        position: 1,
+        category: "Gênero",
+        content: "É um jogo de ação em mundo aberto."
+      },
+      {
+        position: 2,
+        category: "Ano de lançamento",
+        content: "Foi lançado originalmente em 2013."
+      },
+      {
+        position: 3,
+        category: "Desenvolvedora",
+        content: "Foi desenvolvido pela Rockstar North."
+      },
+      {
+        position: 4,
+        category: "Plataformas",
+        content: "Está disponível para PlayStation, Xbox e PC."
+      },
+      {
+        position: 5,
+        category: "Descrição",
+        content: "A história acompanha três protagonistas em Los Santos."
+      },
+      {
+        position: 6,
+        category: "Dica final",
+        content: "O jogo possui um modo online muito conhecido."
+      }
+    ]
+  },
+
+  {
+    title: "The Witcher 3: Wild Hunt",
+    normalizedTitle: "the witcher 3 wild hunt",
+    coverUrl: "/covers/the-witcher-3.jpg",
+    aliases: "the witcher 3,witcher 3,wild hunt",
+    releaseYear: 2015,
+    developer: "CD Projekt Red",
+    publisher: "CD Projekt",
+    description:
+      "Um RPG de mundo aberto sobre um caçador de monstros em busca de sua filha adotiva.",
+    platforms: "PC, PlayStation, Xbox, Nintendo Switch",
+    genres: "RPG, Ação, Aventura",
+    difficulty: "dificil",
+    isActive: true,
+    isDailyEligible: true,
+    hints: [
+      {
+        position: 1,
+        category: "Gênero",
+        content: "É um RPG de ação e aventura."
+      },
+      {
+        position: 2,
+        category: "Ano de lançamento",
+        content: "Foi lançado em 2015."
+      },
+      {
+        position: 3,
+        category: "Desenvolvedora",
+        content: "Foi desenvolvido pela CD Projekt Red."
+      },
+      {
+        position: 4,
+        category: "Plataformas",
+        content: "Está disponível para PC, consoles e Nintendo Switch."
+      },
+      {
+        position: 5,
+        category: "Descrição",
+        content: "O protagonista percorre um grande mundo aberto caçando monstros."
+      },
+      {
+        position: 6,
+        category: "Dica final",
+        content: "O protagonista é conhecido como um bruxo."
+      }
+    ]
   }
+
 ];
 
 async function main() {
